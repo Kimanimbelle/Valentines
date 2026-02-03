@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 Valentine — FINAL BOSS</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+body{
+  height:100vh;display:flex;justify-content:center;align-items:center;
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  overflow:hidden;transition:background .6s
+}
+.screen{text-align:center;display:none}
+.active{display:block}
+h1{font-size:2.4rem;margin-bottom:14px}
+button{
+  padding:12px 28px;border:none;border-radius:30px;
+  font-size:1rem;cursor:pointer;transition:.3s
+}
+.refresh-btn,.yes-btn{background:#ff4d6d;color:#fff}
+.no-btn{background:#444;color:#fff;position:absolute}
+.hidden{opacity:0;pointer-events:none}
+#message{display:none;margin-top:22px;font-size:1.25rem}
+canvas{position:fixed;inset:0;pointer-events:none}
+.glow{box-shadow:0 0 30px rgba(255,77,109,.8)}
+
+/* Screenshot bait */
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:9998}
+.flash-on{animation:flash .25s}
+@keyframes flash{from{opacity:.9}to{opacity:0}}
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#111;color:#fff;padding:10px 14px;border-radius:10px;
+  opacity:0;z-index:9999;transition:.4s
+}
+.toast-show{opacity:1}
+
+/* Popup */
+#popup{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:9997;align-items:center;justify-content:center
+}
+#popup .box{
+  background:#fff;padding:18px;border-radius:12px;text-align:center;
+  width:90%;max-width:340px
+}
+
+/* Fake WhatsApp Notification */
+#waNotif{
+  position:fixed;top:-120px;left:50%;transform:translateX(-50%);
+  width:92%;max-width:420px;
+  background:#1f2c34;color:#fff;
+  border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  padding:12px 14px;z-index:10000;
+  transition:top .6s ease
+}
+#waNotif.show{top:12px}
+#waNotif .title{font-weight:600;font-size:.95rem}
+#waNotif .msg{opacity:.9;font-size:.9rem;margin-top:4px}
+#waNotif .time{float:right;opacity:.6;font-size:.75rem}
+</style>
+</head>
+
+<body>
+
+<!-- 404 -->
+<div class="screen active" id="screen404">
+  <h1>404</h1>
+  <p>Page Not Found 😅</p>
+  <button class="refresh-btn" onclick="showValentine()">Refresh</button>
+</div>
+
+<!-- Valentine -->
+<div class="screen" id="valentine">
+  <h1>Will you be my Valentine? 💔</h1>
+  <button class="yes-btn" id="yesBtn">YES</button>
+  <button class="no-btn" id="noBtn">NO</button>
+  <div id="message">
+    huwa unanitaka sindio😂😂? Usikatae this is a safe space.
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="popup">
+  <div class="box">
+    <h3>💘 Valentine Question</h3>
+    <p><strong>Kimani wants you to be his valentine😭, Will you😂🤔?</strong></p>
+    <button id="popNo">NO 😭</button>
+    <button id="popYes" style="background:#ff4d6d;color:#fff">YES 😳</button>
+  </div>
+</div>
+
+<!-- Fake WhatsApp Notification -->
+<div id="waNotif">
+  <div class="title">WhatsApp <span class="time">now</span></div>
+  <div class="msg">👀 Someone is watching your answer…</div>
+</div>
+
+<div id="flash"></div>
+<div id="toast">📸 Screenshot saved</div>
+<canvas id="confetti"></canvas>
+
+<!-- Audio -->
+<audio id="bgMusic" loop>
+  <source src="https://cdn.pixabay.com/audio/2023/02/28/audio_25b6b1a4a1.mp3">
+</audio>
+<audio id="noSound">
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_5d3c2a8c55.mp3">
+</audio>
+<audio id="notifSound">
+  <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_2c8b5d8a33.mp3">
+</audio>
+
+<script>
+const screen404=document.getElementById('screen404');
+const valentine=document.getElementById('valentine');
+const yesBtn=document.getElementById('yesBtn');
+const noBtn=document.getElementById('noBtn');
+const msg=document.getElementById('message');
+const title=valentine.querySelector('h1');
+const popup=document.getElementById('popup');
+const popYes=document.getElementById('popYes');
+const popNo=document.getElementById('popNo');
+const bgMusic=document.getElementById('bgMusic');
+const noSound=document.getElementById('noSound');
+const notifSound=document.getElementById('notifSound');
+const flash=document.getElementById('flash');
+const toast=document.getElementById('toast');
+const waNotif=document.getElementById('waNotif');
+
+let noClicks=0, aiInterval=null, popupShown=false;
+let noButtons=[noBtn];
+
+function showValentine(){
+  screen404.classList.remove('active');
+  valentine.classList.add('active');
+  bgMusic.volume=.4; bgMusic.play();
+  noBtn.style.left='55%'; noBtn.style.top='60%';
+  showWANotif("💌 New message","Valentine request pending…");
+}
+
+function screenshotBait(){
+  flash.classList.add('flash-on');
+  toast.classList.add('toast-show');
+  if(navigator.vibrate) navigator.vibrate(120);
+  setTimeout(()=>{
+    flash.classList.remove('flash-on');
+    toast.classList.remove('toast-show');
+  },900);
+}
+
+function showWANotif(titleText,msgText){
+  waNotif.querySelector('.title').innerHTML=`WhatsApp <span class="time">now</span>`;
+  waNotif.querySelector('.msg').textContent=msgText;
+  notifSound.currentTime=0; notifSound.play();
+  if(navigator.vibrate) navigator.vibrate([80,40,80]);
+  waNotif.classList.add('show');
+  setTimeout(()=>waNotif.classList.remove('show'),3000);
+}
+
+function yesAction(){
+  screenshotBait();
+  showWANotif("WhatsApp","😳 They said YES!");
+  msg.style.display='block';
+  setTimeout(()=>{
+    yesBtn.classList.add('hidden');
+    noButtons.forEach(b=>b.classList.add('hidden'));
+  },1000);
+  startConfetti(); setTimeout(stopConfetti,5000);
+}
+yesBtn.onclick=yesAction;
+
+function handleNo(btn){
+  noClicks++;
+  noSound.currentTime=0;
+  noSound.playbackRate=Math.min(2,1+noClicks*.05);
+  noSound.play();
+  if(navigator.vibrate) navigator.vibrate(noClicks>=10?[200,100,200]:80);
+
+  btn.style.left=Math.random()*(innerWidth-120)+'px';
+  btn.style.top=Math.random()*(innerHeight-60)+'px';
+  btn.style.transform=`scale(${Math.max(.6,1-noClicks*.08)}) rotate(${Math.random()*360}deg)`;
+
+  document.body.style.background=`linear-gradient(135deg,
+    hsl(${Math.random()*360},80%,70%),
+    hsl(${Math.random()*360},80%,80%))`;
+
+  if(noClicks===2) showWANotif("WhatsApp","👀 Why are you pressing NO?");
+  if(noClicks>=2) title.innerHTML='Will you be my Valentine? 😂';
+  if(noClicks===3||noClicks===6) duplicateNo();
+  if(noClicks===8 && !aiInterval){
+    showWANotif("WhatsApp","⚠️ Decision required NOW");
+    forceYes();
+  }
+  if(noClicks===10 && !popupShown){
+    popupShown=true; popup.style.display='flex';
+    showWANotif("WhatsApp","📸 Camera… just kidding 😈");
+  }
+}
+
+function duplicateNo(){
+  const c=noBtn.cloneNode(true);
+  c.style.left=Math.random()*(innerWidth-120)+'px';
+  c.style.top=Math.random()*(innerHeight-60)+'px';
+  document.body.appendChild(c);
+  c.onclick=()=>handleNo(c);
+  noButtons.push(c);
+}
+noBtn.onclick=()=>handleNo(noBtn);
+
+function forceYes(){
+  yesBtn.classList.add('glow');
+  let s=1;
+  aiInterval=setInterval(()=>{
+    s+=.05; yesBtn.style.transform=`scale(${s})`;
+    if(s>=1.8){
+      clearInterval(aiInterval);
+      if(navigator.vibrate) navigator.vibrate([300,150,300]);
+      yesAction();
+    }
+  },500);
+}
+
+popYes.onclick=()=>{
+  popup.style.display='none';
+  screenshotBait();
+  showWANotif("WhatsApp","💘 Confirmed!");
+  title.innerHTML='You really said YES? 😳😂';
+  if(!aiInterval) forceYes();
+};
+popNo.onclick=()=>{
+  popup.style.display='none';
+  showWANotif("WhatsApp","😏 Nice try");
+  title.innerHTML='Nice try 😏';
+  if(!aiInterval) forceYes();
+};
+
+// Confetti
+const canvas=document.getElementById('confetti'),ctx=canvas.getContext('2d');
+canvas.width=innerWidth; canvas.height=innerHeight;
+let pieces=[],confettiInt;
+function startConfetti(){
+  pieces=[];
+  for(let i=0;i<300;i++) pieces.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*6+2,
+    d:Math.random()*5+1,
+    c:`hsl(${Math.random()*360},100%,60%)`
+  });
+  confettiInt=setInterval(draw,16);
+}
+function stopConfetti(){
+  clearInterval(confettiInt);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pieces.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c; ctx.fill();
+    p.y+=p.d;
+    if(p.y>canvas.height)p.y=0;
+  });
+}
+</script>
+</body>
+</html>
